@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title> Date Format </title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css"></style>
+</head>
+
+<body>
+	<script type="text/javascript">
+
+	// init window size
+	var w = 1000;
+	var h = 450;
+	var padding = 100;
+
+	
+	// init date format
+	var parseDate = d3.timeParse("%b-%y") //Y大写对应四个数字的年份
+	var reparseDate = d3.timeFormat("%y/%m")
+
+
+	// init XY scale (wait domain...)
+	xScale = d3.scaleTime().range([padding , w - padding])
+	yScale = d3.scaleLinear().range([h - padding, padding])
+
+
+	// init axis 
+	xAxis = d3.axisBottom().scale(xScale).ticks(10).tickFormat(reparseDate);
+	yAxis = d3.axisLeft().scale(yScale)
+
+
+	// init svg
+	var svg = d3.select("body")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h)	
+
+
+	// load data
+	d3.csv("ev_sales_data.csv").then(function(incomingData){
+
+		incomingData.forEach(function(d){
+			d.date = parseDate(d.Date)
+		})
+
+		// respond xScale
+		xScale.domain(d3.extent(incomingData, d=>d.date))
+
+
+		// create axis
+		svg.append("g")
+			.attr("transform", "translate(0," + (h - padding) + ")")
+			.call(xAxis)
+			.attr("class", "axis")
+		svg.append("g")
+			.attr("transform", "translate(" + padding + ",0)")
+			.call(yAxis)
+			.attr("class", "axis")
+
+		// output date after parseDate
+		svg.append("g")
+			.selectAll("text")
+			.data(incomingData)
+			.enter()
+			.append("text")
+			.text(d=>d.date)
+			.attr("x", (d,i)=> i*50)
+			.attr("y", (d,i)=> i*10)
+			.attr("fill", "teal")
+			.attr("font-size",10)
+
+
+
+	})
+
+	</script>
+</body>
+</html>
