@@ -5,7 +5,11 @@
 	<meta charset="utf-8">
 	<title> Date Format </title>
 	<script src="https://d3js.org/d3.v6.min.js"></script>
-	<style type="text/css"></style>
+	<style type="text/css">
+		.axis{
+			font: 14px sans-serif;
+		}
+	</style>
 </head>
 
 <body>
@@ -19,7 +23,7 @@
 	
 	// init date format
 	var parseDate = d3.timeParse("%b-%y") //Y大写对应四个数字的年份
-	var reparseDate = d3.timeFormat("%y/%m")
+	var reparseDate = d3.timeFormat("%y/%b")
 
 
 	// init XY scale (wait domain...)
@@ -29,7 +33,8 @@
 
 	// init axis 
 	// xAxis = d3.axisBottom().scale(xScale).ticks(10).tickFormat(reparseDate)
-	xAxis = d3.axisTop().scale(xScale).ticks(10).tickFormat(reparseDate);
+	xAxis = d3.axisBottom().scale(xScale).ticks(d3.timeMonth.every(2)).tickFormat(reparseDate)
+	// xAxis = d3.axisTop().scale(xScale).ticks(d3.timeMonth.every(2)).tickFormat(reparseDate)
 	yAxis = d3.axisLeft().scale(yScale)
 
 
@@ -51,15 +56,49 @@
 		xScale.domain(d3.extent(incomingData, d=>d.date))
 
 
-		// create axis
+		// create X axis
 		svg.append("g")
 			.attr("transform", "translate(0," + (h - padding) + ")")
 			.call(xAxis)
 			.attr("class", "axis")
+			.selectAll("text")
+				.style("text-anchor", "end")
+				.attr("transform", "rotate(-25)")
+				.attr("dx", ".5em")
+				.attr("dy", ".7em")
+		// x label
+		svg.append("text")
+		      .attr("x", w/2 )
+		      .attr("y",  h )
+		      .style("text-anchor", "middle")
+		      .text("Date");
+
+		// create Y axis
 		svg.append("g")
 			.attr("transform", "translate(" + padding + ",0)")
 			.call(yAxis)
 			.attr("class", "axis")
+
+		// y label
+		svg.append("g")
+				.attr("transform", "translate(" + 50 + "," + 250 +")")
+			.append("text")
+				// .attr("x", 450)
+				// .attr("y", 250)
+				.attr("dy", ".3em")//相对于左边定义的一个框非右侧y轴
+				.attr("transform", "rotate(-90)")	
+				.style("text-anchor","middle")
+				.text("Value")
+
+		// add title
+		 svg.append("text")
+		      .attr("x", w/2)
+		      .attr("y", 100)
+		      .attr("text-anchor", "middle")
+		      .style("font-size", "20px")
+		      .style("text-decoration", "underline")
+		      .text("Value vs Date Graph")
+			
 
 		// output date after parseDate
 		svg.append("g")

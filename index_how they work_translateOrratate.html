@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<head>
+    <title>SVG Transform</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style type="text/css">
+        svg#main {
+            width: 5in;
+            height: 5in;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>SVG Transform</h1>
+    <div>
+        <svg xmlns="http://www.w3.org/2000/" id="main">
+        </svg>
+    </div>
+    <script>
+        let svg = d3.select("#main")
+        svg.attr('style', 'background-color: #dddddd')
+        console.log(svg)
+
+        svg.append('circle').attr('transform', 'translate(100, 100)').attr('r', '3')
+
+        let g = svg.append('g').attr('transform', 'translate(100, 100)')
+        g.append('text').attr('transform', 'translate(50, 50)').text('|Text 1|')
+        g.append('text').attr('transform', 'rotate(45) translate(50, 50)').text('|Text 2|')
+        g.append('text').attr('transform', 'translate(50, 50) rotate(45)').text('|Text 3|')
+    </script>
+</body>
+
+</html>

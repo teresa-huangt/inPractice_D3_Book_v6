@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title> Date Format </title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+		.axis{
+			font: 14px sans-serif;
+		}
+
+		.area{
+			color: #00e640;
+			fill: #00e640;
+		}
+	</style>
+</head>
+
+<body>
+	<script type="text/javascript">
+	// const colors, reusable from light to dark
+	green0 = "#c8f7c5"
+	green1 = "#29f1c3"
+	green2 = "#00e640"
+	blue0 = "#a2ded0"
+	blue1 = "#86e2d5"
+	blue2 = "#4ecdc4"
+	purple0 = "#947cb0"
+	purple1 = "#a96dad"
+	purple2 = "#8c14fc"
+	gray1 = "#ececec"
+	gray0 = "#ecf0f1"
+	gray2 = "#6c7a89"
+
+	// init window size
+	var w = 1000;
+	var h = 450;
+	var padding = 100;
+
+	
+	// init date format
+	var parseDate = d3.timeParse("%b-%y") //Y大写对应四个数字的年份
+	var reparseDate = d3.timeFormat("%y/%b")
+
+
+	// init XY scale (wait domain...)
+	xScale = d3.scaleTime().range([padding , w - padding])
+	yScale = d3.scaleLinear().range([padding, h - padding])
+
+
+	// init axis 
+	// xAxis = d3.axisBottom().scale(xScale).ticks(10).tickFormat(reparseDate)
+	xAxis = d3.axisBottom().scale(xScale).ticks(d3.timeMonth.every(2)).tickFormat(reparseDate)
+	// xAxis = d3.axisTop().scale(xScale).ticks(d3.timeMonth.every(2)).tickFormat(reparseDate)
+	yAxis = d3.axisLeft().scale(yScale)
+
+
+	// init svg
+	var svg = d3.select("body")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h)	
+
+
+	// load data
+	d3.csv("ev_sales_data.csv").then(function(incomingData){
+
+		incomingData.forEach(function(d){
+			d.date = parseDate(d.Date)
+			d.value = + d['Nissan Leaf']
+			// console.log("check d.value", d['Nissan Leaf'])
+			// console.log("check d[1]['Smart ED']",d['Smart ED'])
+		})
+
+		// respond xScale yScale
+		xScale.domain(d3.extent(incomingData, d=>d.date))
+		yScale.domain(d3.extent(incomingData, d=>d.value))
+
+
+		// create X axis
+		svg.append("g")
+			.attr("transform", "translate(0," + (h - padding) + ")")
+			.call(xAxis)
+			.attr("class", "axis")
+			.selectAll("text")
+				.style("text-anchor", "end")
+				.attr("transform", "rotate(-25)")
+				.attr("dx", ".5em")
+				.attr("dy", ".7em")
+		// x label
+		svg.append("text")
+		      .attr("x", w/2 )
+		      .attr("y",  h )
+		      .style("text-anchor", "middle")
+		      .text("Date");
+
+		// create Y axis
+		svg.append("g")
+			.attr("transform", "translate(" + padding + ",0)")
+			.call(yAxis)
+			.attr("class", "axis")
+
+		// y label
+		svg.append("g")
+				.attr("transform", "translate(" + 50 + "," + 250 +")")
+			.append("text")
+				// .attr("x", 450)
+				// .attr("y", 250)
+				.attr("dy", ".3em")//相对于左边定义的一个框非右侧y轴
+				.attr("transform", "rotate(-90)")	
+				.style("text-anchor","middle")
+				.text("Value")
+
+		// add title
+		 svg.append("text")
+		      .attr("x", w/2)
+		      .attr("y", 100)
+		      .attr("text-anchor", "middle")
+		      .style("font-size", "20px")
+		      .style("text-decoration", "underline")
+		      .text("Value vs Date Graph")
+		
+
+		// add area
+		var areaValue = d3.area()
+							.x(d=>xScale(d.date))
+							.y0(0)
+							.y1(d=>yScale(d.value))
+							// .curve(d3.curveBasisOpen)
+
+		svg.append("path")
+			// .data(incomingData)
+			.attr("class", "area")
+			.attr("d", areaValue(incomingData))
+			.attr("stroke", gray0)
+			.attr("stroke-width", 5)
+			// .attr("fill", green2)
+
+
+
+
+	})
+
+	</script>
+</body>
+</html>
