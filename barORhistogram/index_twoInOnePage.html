@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>bar/histogram</title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+		.bar{fill: #6c7a89;}
+	</style>
+</head>
+<body>
+	<div> 
+	<svg id="placeholder1"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder2"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder3"; style="width:600px; height:600px; border: 1px"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder4"; style="width:600px; height:600px; border: 1px"></svg>
+	</div>
+
+
+	<script type="text/javascript">
+	// const colors, reusable from light to dark
+	green0 = "#c8f7c5"
+	green1 = "#29f1c3"
+	green2 = "#00e640"
+	blue0 = "#a2ded0"
+	blue1 = "#86e2d5"
+	blue2 = "#4ecdc4"
+	purple0 = "#947cb0"
+	purple1 = "#a96dad"
+	purple2 = "#8c14fc"
+	gray1 = "#ececec"
+	gray0 = "#ecf0f1"
+	gray2 = "#6c7a89"
+
+
+	// init window
+	var w = 400
+	var h = 200
+	var margin = {top: 20, right: 20, bottom: 30, left: 40}
+	var width = w - margin.right - margin.left
+	var height = h - margin.top - margin.bottom
+
+
+	// init sacle format
+	var xScale = d3.scaleBand().range([0, width]).padding(0.1)
+	var yScale = d3.scaleLinear().range([height, 0])
+
+	var xScaleTime = d3.scaleTime().domain([new Date(2010, 6, 3), new Date(2012, 0, 1)]).rangeRound([0, width])
+	var parseDate = d3.timeParse("%d-%m-%Y")
+	var reparseDate = d3.timeFormat("%y-%m")
+
+
+	// init svg
+	var barSVG = d3.select("#placeholder1")
+					.style("width", w)
+					.style("height", h)
+					.append("g")
+					.attr("transform", "translate("+margin.left+","+margin.right+")")
+
+	var hisSVG = d3.select("#placeholder2")
+					.attr("width", w)
+					.attr("height", h)
+					.append("g")
+					.attr("transform", "translate("+margin.left+","+margin.right+")")
+	
+
+	// load data for bar chart (category data)
+	d3.csv("sales.csv").then(d=>drawBar(d))
+
+    function drawBar(incomingData){
+    	incomingData.forEach(d=>{
+    		d.sales = +d.sales //
+    	})
+
+    	// supplement scale
+    	xScale.domain(incomingData.map(d=>d.salesperson)) //?
+    	yScale.domain([0, d3.max(incomingData, d=>d.sales)])
+
+    	// draw
+    	barSVG.selectAll(".bar")
+    			.data(incomingData)
+    			.enter()
+    			.append("rect")
+    			.attr("class", "bar")
+    			.attr("x", d=>xScale(d.salesperson))
+    			.attr("y", d=>yScale(d.sales))
+    			.attr("width", xScale.bandwidth())
+    			.attr("height", d=>height - yScale(d.sales))
+
+		// axis
+		barSVG.append("g")
+			.attr("transform", "translate(0,"+height+")")
+			.call(d3.axisBottom(xScale))
+		barSVG.append("g")
+			.call(d3.axisLeft(yScale))
+
+    }
+
+
+    // init histogram
+    var histogram = d3.bin()
+    					.value(d=>d.date)
+    					.domain(xScaleTime.domain())
+    					.thresholds(xScaleTime.ticks(d3.timeMonth))
+
+
+    // load data for histogram (quantity)
+    d3.csv("earthquakes.csv").then(d=>drawHis(d))
+
+    function drawHis(incomingData){
+    	incomingData.forEach(d=>{
+    		d.date = parseDate(d.dtg)
+    	})
+
+    	// use histogram
+    	var bins = histogram(incomingData)
+    	console.log("check bins", bins)
+
+    	// supplement scale
+    	// xScaleTime.domain(d3.extent(incomingData, d=>d.date))
+    	yScale.domain([0, d3.max(bins, d=>{
+    		console.log("check bins length", d.length)
+    		return d.length
+    	})])	
+
+    	// draw
+    	hisSVG.selectAll("rect")
+    			.data(bins)
+    			.enter()
+    			.append("rect")
+    			.attr("class", "bar")
+    			.attr("x",1)
+    			.attr("transform", d=>{
+    				console.log("check d", d)
+    				return "translate("+xScaleTime(d.x0)+","+yScale(d.length)+")"
+    			})
+    			.attr("width", d=>{return xScaleTime(d.x1)-xScaleTime(d.x0)-1}) 
+    			.attr("height", d=>{return height - yScale(d.length)})
+
+		// add the x Axis
+		  hisSVG.append("g")
+		      .attr("transform", "translate(0," + height + ")")
+		      .call(d3.axisBottom(xScaleTime).tickFormat(reparseDate));
+		// add the y Axis
+		  hisSVG.append("g")
+		      .call(d3.axisLeft(yScale))
+
+    }
+
+	</script>
+</body>
+</html>

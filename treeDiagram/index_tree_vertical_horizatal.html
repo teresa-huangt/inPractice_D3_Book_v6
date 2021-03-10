@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>tree diagram</title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+		.link {fill: none; stroke: #ccc; stroke-width: 2px;}
+
+	</style>
+</head>
+<body>
+	<div> 
+	<svg id="placeholder1"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder2"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder3"; style="width:600px; height:600px; border: 1px"></svg>
+	</div>
+	<div> 
+	<svg id="placeholder4"; style="width:600px; height:600px; border: 1px"></svg>
+	</div>
+
+
+	<script type="text/javascript">
+	// const colors, reusable from light to dark
+	green0 = "#c8f7c5"
+	green1 = "#29f1c3"
+	green2 = "#00e640"
+	blue0 = "#a2ded0"
+	blue1 = "#86e2d5"
+	blue2 = "#4ecdc4"
+	purple0 = "#947cb0"
+	purple1 = "#a96dad"
+	purple2 = "#8c14fc"
+	gray1 = "#ececec"
+	gray0 = "#ecf0f1"
+	gray2 = "#6c7a89"
+
+	// init dataset
+	var treeData = {
+    "name": "Top Level",
+    "children": [
+				    {
+				        "name": "Level 2: A",
+				        "children": [
+				          { "name": "Son of A" },
+				          { "name": "Daughter of A" }
+			        	]
+					},
+				    
+				    { 	"name": "Level 2: B" }
+	   			 ]
+	};
+
+
+	// init window
+	var w = 400
+	var h = 400
+	var margin = {top: 20, right: 100, bottom: 30, left: 100}
+	var width = w - margin.right - margin.left
+	var height = h - margin.top - margin.bottom
+
+
+	// init tree node
+	var treemap = d3.tree() .size([height, width])
+	var nodes = d3.hierarchy(treeData)
+	nodes = treemap(nodes)
+	console.log("check nodes", nodes)
+	console.log("check nodes.descendants()", nodes.descendants())
+	console.log("check nodes.descendants().slice(1)", nodes.descendants().slice(1))
+
+
+
+	// init svg
+	var svg = d3.select("#placeholder1")
+					.style("width", w)
+					.style("height", h)
+					.append("g")
+					.attr("transform", "translate("+margin.left+","+margin.right+")")
+
+	// add links
+	var link = svg.selectAll(".link")
+					.data( nodes.descendants().slice(1))
+					.enter()
+					.append("path")
+					.attr("class", "link")
+					.attr("d", d=>{
+						console.log("check d in link", d)
+						return "M" + d.y + "," + d.x
+								+ "C" +  (d.y + d.parent.y) / 2 + "," + d.x
+								+ " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+								+ " " + d.parent.y + "," + d.parent.x
+					})
+
+	// adds each node as a group
+	var node = svg.selectAll(".node") 
+				.data(nodes.descendants())
+				.enter()
+				.append("g") 
+				.attr("class", function(d) {
+					console.log("check d in node", d)
+					return "node" +
+					(d.children ? " node--internal" : " node--leaf"); 
+				})
+				.attr("transform", function(d) {
+					return "translate(" + d.y + "," + d.x + ")"; 
+				});
+	// adds the circle to the node
+	node.append("circle")
+	  	.attr("r", 10);
+  	// text
+	node.append("text")
+	.attr("dy", ".35em")
+	.attr("x", function(d) { return d.children ? -13 : 13; }) .style("text-anchor", function(d) {
+	return d.children ? "end" : "start"; }) .text(function(d) { return d.data.name; });
+
+
+
+	</script>
+</body>
+</html>

@@ -22,16 +22,16 @@
 	// init window size
 	windowW = 500
 	windowH = 500
-	margin = {top:30, bottom:50, left:20, right:20}
+	margin = {top:20, bottom:20, left:20, right:20}
 	width = windowW - margin.left - margin.right
 	height = windowH - margin.top - margin.bottom
 
 	// init scale, grid
-	xScale = d3.scaleLinear().domain([0,300]).range([margin.left , margin.left + width])
-	yScale = d3.scaleLinear().domain([0,300]).range([margin.top , margin.top + height])
+	xScale = d3.scaleLinear().domain([0,460]).range([margin.left , margin.left + width])
+	yScale = d3.scaleLinear().domain([0,460]).range([margin.top , margin.top + height])
 
-	xGrid = d3.axisTop().scale(xScale).ticks(5).tickSize(-height)//.tickFormat("")
-	yGrid = d3.axisLeft().scale(yScale).ticks(5).tickSize(-width)//.tickFormat("")
+	xGrid = d3.axisTop().scale(xScale).ticks(5).tickValues([50,100,150,250]).tickSize(-height)//.tickFormat("")
+	yGrid = d3.axisLeft().scale(yScale).ticks(5).tickValues([50,100,150,250]).tickSize(-width)//.tickFormat("")
 
 
 	// init svg
@@ -43,8 +43,8 @@
 
 	// draw
 	svg.append("rect")
-		.attr("x", 100)
-		.attr("y", 100)
+		.attr("x", xScale(100))
+		.attr("y", yScale(100))
 		.attr("height", 100)
 		.attr("width", 250)
 		.attr("rx", 20)
@@ -55,11 +55,14 @@
 		.attr("class", "grid")
 		.attr("transform", "translate(0," + (margin.top) + ")")
 		.call(xGrid)
+
 	
 	svg.append("g")
 		.attr("class", "grid")
 		.attr("transform", "translate(" + margin.left + ",0)")
 		.call(yGrid)
+
+	console.log("check tickIncrement", d3.ticks(50,250,5))
 	
 
 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title> Curve Rectangle </title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+		.grid line{
+			stroke: lightgrey; stroke-opacity: 0.7; shape-rendering: crispEdges;
+		}
+		.grid path{
+			stroke-width: 0px;
+		}
+	</style>
+</head>
+
+<body>
+	<script type="text/javascript">
+	// const colors, reusable from light to dark
+	green0 = "#c8f7c5"
+	green1 = "#29f1c3"
+	green2 = "#00e640"
+	blue0 = "#a2ded0"
+	blue1 = "#86e2d5"
+	blue2 = "#4ecdc4"
+	purple0 = "#947cb0"
+	purple1 = "#a96dad"
+	purple2 = "#8c14fc"
+	gray1 = "#ececec"
+	gray0 = "#ecf0f1"
+	gray2 = "#6c7a89"
+
+	// init window size
+	windowW = 500
+	windowH = 500
+	margin = {top:30, bottom:50, left:20, right:20}
+	width = windowW - margin.left - margin.right
+	height = windowH - margin.top - margin.bottom
+
+	// init scale, grid
+	xScale = d3.scaleLinear().domain([0,480]).range([margin.left , margin.left + width])
+	yScale = d3.scaleLinear().domain([0,480]).range([margin.top , margin.top + height])
+
+	xGrid = d3.axisTop().scale(xScale).ticks(5).tickValues([50,150,250]).tickSize(-height)//.tickFormat("")
+	yGrid = d3.axisLeft().scale(yScale).ticks(5).tickValues([50,150,250]).tickSize(-width)//.tickFormat("")
+
+
+	// init svg
+	var svg = d3.select("body")
+				.append("svg")
+				.attr("width", width)
+				.attr("height", height)	
+
+
+	// draw clip path
+	svg.append("clipPath")
+			.attr("id", "rect-rect-clip")
+		.append("rect")
+			.attr("x", 100)
+			.attr("y", 100)
+			.attr("height", 100)
+			.attr("width", 250)
+			.attr("rx", 20)
+			.attr("ry", 10)
+
+	svg.append("rect")
+			.attr("x", 150)
+			.attr("y", 150)
+			.attr("height", 100)
+			.attr("width", 250)
+			.attr("clip-path", "url(#rect-rect-clip)")
+			.attr("fill", green0)
+
+
+	// add gird line
+	svg.append("g")
+		.attr("class", "grid")
+		.attr("transform", "translate(0," + (margin.top) + ")")
+		.call(xGrid)
+
+	
+	svg.append("g")
+		.attr("class", "grid")
+		.attr("transform", "translate(" + margin.left + ",0)")
+		.call(yGrid)
+
+	console.log("check ticks", d3.ticks(50,250,5))
+	console.log("check tickIncrement", d3.tickIncrement(50,250,5))
+	console.log("check tickStep", d3.tickStep(50,250,5))
+	
+
+
+
+	</script>
+</body>
+</html>
