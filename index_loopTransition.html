@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title> loop transition </title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+	</style>
+</head>
+
+<body>
+	<script type="text/javascript">
+
+	// init window size
+	var w = 1000
+	var h = 500
+
+	// init svg
+	var svg = d3.select("body")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h)	
+	circleTranstion()
+
+
+	// function
+	function circleTranstion(){
+		var circle = svg.append("circle")
+						.attr("fill", "darkCyan")
+						.attr("r", 20)
+		repeat()
+
+		function repeat(){
+			circle.attr("cx", 40)
+					.attr("cy", 250)
+					.transition()
+					.duration(2000)
+					.attr("cx", 920)
+					.transition()
+					.duration(1000)
+					.attr("cx", 40)
+					.on("end", repeat)
+
+		}
+	}
+
+	</script>
+</body>
+</html>

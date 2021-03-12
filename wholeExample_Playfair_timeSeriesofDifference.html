@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title> whole_example_playfair_time_seriesof_difference </title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+		.Axis path, 
+		.Axis line {
+			fill: none;
+			stroke: #6c7a89;  /*gray2*/
+			shape-rendering: crispEdges;
+		}
+
+		.x.Axis line{ /*刻度线*/
+			display: none;
+		}
+		.x.Axis path{ /*轴线*/
+			display: none;
+		}
+
+	</style>
+</head>
+
+<body>
+	<!-- placeholder1 -->
+	<div> 
+	<svg id="placeholder1"></svg>
+	</div> 
+
+	<!-- d3js -->
+	<script type="text/javascript">
+		//============================================================
+		//                          init
+		//============================================================
+
+		// init color list
+		green0 = "#c8f7c5"
+		green1 = "#29f1c3"
+		green2 = "#00e640"
+		blue0 = "#a2ded0"
+		blue1 = "#86e2d5"
+		blue2 = "#4ecdc4"
+		purple0 = "#947cb0"
+		purple1 = "#a96dad"
+		purple2 = "#8c14fc"
+		gray1 = "#ececec"
+		gray0 = "#ecf0f1"
+		gray2 = "#6c7a89"
+
+		// init text
+		var title = "whole_example_playfair_time_series_of_difference"
+
+		// init window size
+		var wholeW = 1000
+		var wholeH = 600
+
+		var margin = {left:50, right:50, top:50, bottom:50}
+
+		var width = wholeW - margin.left - margin.right
+		var height = wholeH - margin.top - margin.bottom
+
+		// init format transition
+		var parseYmd = d3.timeParse("%Y-%m-%d")
+
+		// init scale
+		var xScale = d3.scaleTime().range([0, width])
+		var yScale = d3.scaleLinear().range([height, 0])
+
+		// init axis
+		var xAxis = d3.axisBottom().scale(xScale)//.ticks().tickValues()
+		var yAxis = d3.axisLeft().scale(yScale)
+
+		// init line
+		var lineBookR = d3.line()
+						.curve(d3.curveBasis)
+						.x(d=>xScale(d.date))
+						.y(d=>yScale(d.diff_bookR))
+
+		var lineBookE = d3.line()
+						.curve(d3.curveBasis)
+						.x(d=>xScale(d.date))
+						.y(d=>yScale(d.diff_bookE))
+
+		// init baseline area = bookR; y0下面定义0/height，分割上下area
+		var areaBookR = d3.area()
+						.curve(d3.curveBasis)
+						.x(d=>xScale(d.date))
+						.y1(d=>yScale(d.diff_bookR))
+
+		// init svg
+		var svg = d3.select("#placeholder1")
+						.attr("width", wholeW)
+						.attr("height", wholeH)
+					.append("g")
+						.attr("transform", "translate("+margin.left+","+margin.top+")")
+
+		//============================================================
+		//                    load data & draw
+		//============================================================
+
+		d3.csv("downloads.csv").then(d=>drawChart(d))
+
+		function drawChart(incomingData){
+
+			console.log("check incomingData", incomingData)
+			incomingData.forEach(d=>{
+				d.date = parseYmd(d.date_entered)
+				d.download = +d.downloaded
+			})
+			console.log("check incomingData after forEach", incomingData)
+
+			// (test) d3.group(map) VS. d3.groups(array) VS. map2array
+			var groupData = d3.group(incomingData, d => d.date_entered)
+			console.log("check groupData", groupData)
+
+			var groupsData = d3.groups(incomingData, d => d.date_entered)
+			console.log("check groupsData", groupsData)
+
+			// data used 
+			var map2arrayData = Array.from(
+								d3.group(incomingData, d => d.date_entered),
+								([key, value]) => ({key, value})
+								)
+			console.log("check map2arrayData", map2arrayData)
+			var data = map2arrayData
+
+			// separate bookR and bookE in data
+			data.forEach(d=>{
+				d.date = d.value[0]["date"]
+				d["bookR"] = d.value[0]["download"]
+				d["bookE"] = d.value[1]["download"]
+			})
+			console.log("check data after separate", data)
+
+			// calculate increase in data
+			for (i=data.length-1; i>0; i--){
+				console.log("check", "check position",i)
+				data[i].diff_bookR = data[i].bookR - data[(i-1)].bookR;
+				data[i].diff_bookE = data[i].bookE - data[(i-1)].bookE
+			}
+			console.log("check data after cal diff", data)
+			data.shift()
+			console.log("check data after shift", data)
+			
+
+			// supplement scale domain after load data
+			xScale.domain(d3.extent(data, d=>d.date))
+			yScale.domain([0, d3.max(data, d=>{return Math.max(d.diff_bookR, d.diff_bookE)})])
+			console.log("check y-max", d3.max(data, d=>{return Math.max(d.diff_bookR, d.diff_bookE)}))
+
+			// ？ data VS. datum https://stackoverflow.com/questions/13181194/d3js-when-to-use-datum-and-data
+			console.log("check data [{}]or{}", data)
+			svg.datum(data)
+
+			
+
+			// clip area E>R blue2
+			areaBookR.y0(0)
+			svg.append("clipPath")
+					.attr("id", "R-above")
+				.append("path")
+					.attr("d", areaBookR(data))
+
+
+			areaBookR.y0(d=>yScale(d.diff_bookE))
+			svg.append("path")
+				.attr("class", "E>R" )
+				.attr("clip-path", "url(#R-above)")
+				.attr("d", areaBookR(data))
+				.attr("fill", blue2)
+
+			// clip area E<R gray0
+			areaBookR.y0(height)
+			svg.append("clipPath")
+					.attr("id", "R-below")
+				.append("path")
+					.attr("d", areaBookR(data))
+
+
+			areaBookR.y0(d=>yScale(d.diff_bookE))
+			svg.append("path")
+				.attr("class", "E<R" )
+				.attr("clip-path", "url(#R-below)")
+				.attr("d", areaBookR(data))
+				.attr("fill", gray0)
+
+
+			// draw two lines; bookR & bookE
+			svg.append("path")
+				.attr("class", "line")
+				.attr("d", lineBookR(data))
+				.style("stroke", gray2)
+				.attr("stroke-width", 3)
+				.attr("fill", "none")
+
+			svg.append("path")
+				.attr("class", "line")
+				.attr("d", lineBookE(data))
+				.style("stroke", blue2)
+				.attr("stroke-width", 3)
+				.attr("fill", "none")
+
+			// draw axis
+			svg.append("g")
+				.attr("class", "y Axis")
+				.call(yAxis)
+
+			svg.append("g")
+				.attr("class", "x Axis")
+				.call(xAxis)
+				.attr("transform", "translate(0,"+height+")")
+
+			// draw title
+			svg.append("text") // Title 
+				.attr("x", (width / 2)) 
+				.attr("y", 50 ) 
+				.attr("text-anchor", "middle") 
+				.style("font-size", "30px") 
+				.style("stroke", "none") 
+				.text(title);
+
+		}
+
+
+	</script>
+
+</body>
+
+</html>

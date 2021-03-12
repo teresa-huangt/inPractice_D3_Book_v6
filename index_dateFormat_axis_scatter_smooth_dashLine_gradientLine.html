@@ -9,11 +9,29 @@
 		.axis{
 			font: 14px sans-serif;
 		}
+		.line{
+			fill: none;
+			stroke: url(#line-gradient);
+			stroke-width: 2px;
+		}
 	</style>
 </head>
 
 <body>
 	<script type="text/javascript">
+	// const colors, reusable from light to dark
+	green0 = "#c8f7c5"
+	green1 = "#29f1c3"
+	green2 = "#00e640"
+	blue0 = "#a2ded0"
+	blue1 = "#86e2d5"
+	blue2 = "#4ecdc4"
+	purple0 = "#947cb0"
+	purple1 = "#a96dad"
+	purple2 = "#8c14fc"
+	gray1 = "#ececec"
+	gray0 = "#ecf0f1"
+	gray2 = "#6c7a89"
 
 	// init window size
 	var w = 1000;
@@ -50,11 +68,14 @@
 
 		incomingData.forEach(function(d){
 			d.date = parseDate(d.Date)
+			d.value = + d['Nissan Leaf']
+			// console.log("check d.value", d['Nissan Leaf'])
+			// console.log("check d[1]['Smart ED']",d['Smart ED'])
 		})
-		console.log("check incomingData", incomingData)
 
-		// respond xScale
+		// respond xScale yScale
 		xScale.domain(d3.extent(incomingData, d=>d.date))
+		yScale.domain(d3.extent(incomingData, d=>d.value))
 
 
 		// create X axis
@@ -62,6 +83,7 @@
 			.attr("transform", "translate(0," + (h - padding) + ")")
 			.call(xAxis)
 			.attr("class", "axis")
+			.style("stroke-dasharray", ("3, 3"))//dashLine
 			.selectAll("text")
 				.style("text-anchor", "end")
 				.attr("transform", "rotate(-25)")
@@ -79,6 +101,7 @@
 			.attr("transform", "translate(" + padding + ",0)")
 			.call(yAxis)
 			.attr("class", "axis")
+			.style("stroke-dasharray", ("3, 3"))//dashLine
 
 		// y label
 		svg.append("g")
@@ -102,16 +125,65 @@
 			
 
 		// output date after parseDate
-		svg.append("g")
-			.selectAll("text")
-			.data(incomingData)
+		// svg.append("g")
+		// 	.selectAll("text")
+		// 	.data(incomingData)
+		// 	.enter()
+		// 	.append("text")
+		// 	.text(d=>d.date)
+		// 	.attr("x", (d,i)=> i*50)
+		// 	.attr("y", (d,i)=> i*10)
+		// 	.attr("fill", "teal")
+		// 	.attr("font-size",10)
+
+		// set the gradient
+		  svg.append("linearGradient")
+			    .attr("id", "line-gradient")
+			    .attr("gradientUnits", "userSpaceOnUse")
+			    .attr("x1", 0).attr("y1", yScale(0))
+			    .attr("x2", 0).attr("y2", yScale(2000))
+			 .selectAll("stop")
+			 .data([
+			      {offset: "0%", color: "red"},
+			      {offset: "40%", color: "red"},
+			      {offset: "40%", color: "black"},
+			      {offset: "62%", color: "black"},
+			      {offset: "62%", color: "lawngreen"},
+			      {offset: "100%", color: "lawngreen"}
+			    ])
 			.enter()
-			.append("text")
-			.text(d=>d.date)
-			.attr("x", (d,i)=> i*50)
-			.attr("y", (d,i)=> i*10)
-			.attr("fill", "teal")
-			.attr("font-size",10)
+			.append("stop")
+			.attr("offset", function(d) { return d.offset; }) 
+			.attr("stop-color", function(d) { return d.color; })
+
+		// add line
+		var lineValue = d3.line()
+							.x(d=>xScale(d.date))
+							.y(d=>yScale(d.value))
+							// .curve(d3.curveBasis)
+							// .curve(d3.curveStep)
+
+		// console.log("check lineValue", lineValue)
+		svg.append("path")
+			.data(incomingData)
+			.attr("class", "line")
+			.attr("d", lineValue(incomingData))
+			// .attr("stroke", gray2)
+			// .attr("stroke-width", 3)
+			// .attr("fill", "none")
+			// .style("stroke-dasharray", ("5, 3, 10, 3")) //dashLine
+
+		// add scatter (change order avoid overlapping)
+		// svg.append("g")
+		// 	.selectAll("circle")//.selectAll("dot")
+		// 	.data(incomingData)
+		// 	.enter()
+		// 	.append("circle")
+		// 	.attr("cx", d=>xScale(d.date))
+		// 	.attr("cy", d=>yScale(d.value))
+		// 	.attr("r", 5)
+
+
 
 
 
